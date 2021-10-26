@@ -41,6 +41,8 @@
             this.pdfViewer.Name = "pdfViewer";
             this.pdfViewer.Size = new System.Drawing.Size(491, 371);
             this.pdfViewer.TabIndex = 0;
+            this.pdfViewer.ZoomMode = PdfiumViewer.PdfViewerZoomMode.FitBest;
+            this.pdfViewer.LinkClick += new PdfiumViewer.LinkClickEventHandler(this.PdfViewer_LinkClick);
             // 
             // buttonAbout
             // 

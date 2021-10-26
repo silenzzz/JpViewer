@@ -3,7 +3,6 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -11,8 +10,10 @@ namespace jpview
 {
     public partial class FormMain : Form
     {
-        private string icao;
-        private WebClient web = new WebClient();
+        private readonly string icao;
+        private readonly WebClient web = new WebClient();
+
+        //private List<string> mirrors = new List<string>();
 
         public FormMain(string[] args)
         {
@@ -23,27 +24,32 @@ namespace jpview
             {
                 Console.WriteLine("Enter ICAO as first argument");
                 Exit();
-            }
+            } else if (args.Length == 2 && args[0].Equals("-f")) {
+                SetPdf(args[1]);
+            } else {
 
-            icao = args[0].ToUpper();
+                icao = args[0].ToUpper();
 
-            if (!ValidateIcao(icao))
-            {
-                Console.WriteLine("Unknown ICAO");
-                Exit();
-            }
-
-            new Thread(() =>
-            {
-                string fileName = icao + ".pdf";
-                if (!File.Exists(fileName)) {
-                    web.DownloadFileAsync(new Uri(string.Format("https://vau.aero/navdb/chart/{0}.pdf", icao)), fileName, fileName);
-                }
-                else
+                if (!ValidateIcao(icao))
                 {
-                    SetPdf(fileName);
+                    Console.WriteLine("Unknown ICAO");
+                    Exit();
                 }
-            }).Start();
+
+                new Thread(() =>
+                {
+                // C:\Users\%USERNAME%
+                // TODO: store in directory
+                string fileName = string.Format("{0}.pdf", icao);
+                    if (!File.Exists(fileName) || new FileInfo(fileName).Length == 0) {
+                        web.DownloadFileAsync(new Uri(string.Format("https://www.virtualairlines.eu/charts/{0}.pdf", icao)), fileName, fileName);
+                    }
+                    else
+                    {
+                        SetPdfInvoke(fileName);
+                    }
+                }).Start();
+            }
         }
 
         private void Exit()
@@ -53,13 +59,19 @@ namespace jpview
 
         private void OnFileDownloadCompleted(object sender, AsyncCompletedEventArgs e)
         {
-            SetPdf(e.UserState.ToString());
+            SetPdfInvoke(e.UserState.ToString());
+        }
+
+        private void SetPdfInvoke(string fileName)
+        {
+            var pdf = PdfDocument.Load(fileName);
+            pdfViewer.Invoke(new Action(() => pdfViewer.Document = pdf));
         }
 
         private void SetPdf(string fileName)
         {
             var pdf = PdfDocument.Load(fileName);
-            pdfViewer.Invoke(new Action(() => pdfViewer.Document = pdf));
+            pdfViewer.Document = pdf;
         }
 
         private bool ValidateIcao(string icao)
@@ -97,6 +109,11 @@ namespace jpview
                 TopMost = true;
                 buttonTop.Text = "UnTop";
             }
+        }
+
+        private void PdfViewer_LinkClick(object sender, LinkClickEventArgs e)
+        {
+           
         }
     }
 }
