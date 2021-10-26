@@ -2,7 +2,11 @@
 
 App for viewing Jepessen graphs using CLI
 
-Usage:
+## Installation
+
+Run `Install.bat`
+
+## Usage:
 JpViewer.exe <ICAO>
 Example:
 JpViewer.exe EFHK
